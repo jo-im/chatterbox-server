@@ -11,7 +11,13 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
-
+var qs = require('querystring');
+var results = [];
+// results.push({
+//   username: "bob",
+//   text: "I am a test",
+//   roomname: "bobs room"
+// });
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
   //
@@ -28,9 +34,12 @@ var requestHandler = function(request, response) {
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
-
   // The outgoing status.
   var statusCode = 200;
+  if(request.url !== '/classes/messages') {
+    var statusCode = 404;
+  }
+  
 
   // See the note below about CORS headers.
   var headers = defaultCorsHeaders;
@@ -39,12 +48,56 @@ var requestHandler = function(request, response) {
   //
   // You will need to change this if you are sending something
   // other than plain text, like JSON or HTML.
-  headers['Content-Type'] = 'text/plain';
-
+  // original code:
+  // headers['Content-Type'] = 'text/plain';
+  headers['Content-Type'] = 'application/json';
   // .writeHead() writes to the request line and headers of the response,
   // which includes the status and all headers.
-  response.writeHead(statusCode, headers);
 
+  if (request.method === 'OPTIONS') {
+    
+    response.writeHead(statusCode, headers);
+    //somehow get data and push to results
+    console.log('I am an options request');
+  }
+
+  if (request.method === "POST") {
+    var statusCode = 201;
+    response.writeHead(statusCode, headers);
+    
+
+    var body = '';
+
+    request.on('data', function (chunk) {
+      //console.log(data);
+      body += chunk;
+      //results.push(data.toString('utf8', 0));
+
+      // Too much POST data, kill the connection!
+      // 1e6 === 1 * Math.pow(10, 6) === 1 * 1000000 ~~~ 1MB
+      // if (body.length > 1e6) {
+      //   request.connection.destroy();
+      // }
+    });
+
+    request.on('end', function() {
+      
+      var post = JSON.parse(body);
+      console.log(body);
+      results.push(post);
+    });
+    
+    //response.end('Hello World');
+  }
+
+  if (request.method === "GET") {
+    
+    response.writeHead(statusCode, headers);
+    console.log(results);
+    var stuff = JSON.stringify({results: results});
+    response.end(stuff);
+  }
+  
   // Make sure to always call response.end() - Node may not send
   // anything back to the client until you do. The string you pass to
   // response.end() will be the body of the response - i.e. what shows
@@ -52,9 +105,9 @@ var requestHandler = function(request, response) {
   //
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
-  response.end('Hello, World!');
+  response.writeHead(statusCode, headers);
+  response.end(JSON.stringify({results: results}));
 };
-
 // These headers will allow Cross-Origin Resource Sharing (CORS).
 // This code allows this server to talk to websites that
 // are on different domains, for instance, your chat client.
@@ -71,3 +124,5 @@ var defaultCorsHeaders = {
   'access-control-max-age': 10 // Seconds.
 };
 
+module.exports.requestHandler = requestHandler;
+ 
