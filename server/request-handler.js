@@ -13,11 +13,7 @@ this file and include it in basic-server.js so that it actually works.
 **************************************************************/
 var qs = require('querystring');
 var results = [];
-// results.push({
-//   username: "bob",
-//   text: "I am a test",
-//   roomname: "bobs room"
-// });
+
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
   //
@@ -36,7 +32,7 @@ var requestHandler = function(request, response) {
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
   // The outgoing status.
   var statusCode = 200;
-  if(request.url !== '/classes/messages') {
+  if (request.url !== '/classes/messages') {
     var statusCode = 404;
   }
   
@@ -55,45 +51,26 @@ var requestHandler = function(request, response) {
   // which includes the status and all headers.
 
   if (request.method === 'OPTIONS') {
-    
-    response.writeHead(statusCode, headers);
-    //somehow get data and push to results
     console.log('I am an options request');
   }
 
-  if (request.method === "POST") {
+  if (request.method === 'POST') {
     var statusCode = 201;
-    response.writeHead(statusCode, headers);
     
-
     var body = '';
-
     request.on('data', function (chunk) {
-      //console.log(data);
       body += chunk;
-      //results.push(data.toString('utf8', 0));
-
-      // Too much POST data, kill the connection!
-      // 1e6 === 1 * Math.pow(10, 6) === 1 * 1000000 ~~~ 1MB
-      // if (body.length > 1e6) {
-      //   request.connection.destroy();
-      // }
     });
-
     request.on('end', function() {
-      
       var post = JSON.parse(body);
-      console.log(body);
       results.push(post);
     });
     
     //response.end('Hello World');
   }
 
-  if (request.method === "GET") {
-    
+  if (request.method === 'GET') {
     response.writeHead(statusCode, headers);
-    console.log(results);
     var stuff = JSON.stringify({results: results});
     response.end(stuff);
   }
