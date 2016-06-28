@@ -32,7 +32,7 @@ var requestHandler = function(request, response) {
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
   // The outgoing status.
   var statusCode = 200;
-  if (request.url !== '/classes/messages') {
+  if (request.url !== '/classes/messages' && request.url !== '/classes/room') {
     var statusCode = 404;
   }
   
@@ -47,8 +47,7 @@ var requestHandler = function(request, response) {
   // original code:
   // headers['Content-Type'] = 'text/plain';
   headers['Content-Type'] = 'application/json';
-  // .writeHead() writes to the request line and headers of the response,
-  // which includes the status and all headers.
+
 
   if (request.method === 'OPTIONS') {
     console.log('I am an options request');
@@ -56,6 +55,9 @@ var requestHandler = function(request, response) {
 
   if (request.method === 'POST') {
     var statusCode = 201;
+    if (request.url !== '/classes/messages' && request.url !== '/classes/room') {
+      var statusCode = 404;
+    }
     
     var body = '';
     request.on('data', function (chunk) {
@@ -65,14 +67,12 @@ var requestHandler = function(request, response) {
       var post = JSON.parse(body);
       results.push(post);
     });
-    
-    //response.end('Hello World');
   }
 
   if (request.method === 'GET') {
-    response.writeHead(statusCode, headers);
-    var stuff = JSON.stringify({results: results});
-    response.end(stuff);
+    // var statusCode = 200;
+    // var stuff = JSON.stringify({results: results});
+  
   }
   
   // Make sure to always call response.end() - Node may not send
